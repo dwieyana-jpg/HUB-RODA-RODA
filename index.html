@@ -229,7 +229,7 @@
                 <select id="tipeRodaSelect">
                     <option value="seporos">Roda Seporos</option>
                     <option value="sabuk">Tidak Seporos (Dihubungkan Sabuk)</option>
-                    <option value="rantai">Tidak Seporos (Dihubungkan Rantai/Gigi)</option>
+                    <option value="rantai">Tidak Seporos (Disinggungkan langsung)</option>
                 </select>
             </div>
 
@@ -293,7 +293,7 @@
         const statusMessages = {
             seporos: "Jika seporos → Kecepatan Sudut Sama (ω₁ = ω₂)",
             sabuk: "Jika tidak seporos (sabuk) → Kelajuan Linear Sama (v₁ = v₂)",
-            rantai: "Jika tidak seporos (rantai/gigi) → Kelajuan Linear Sama (v₁ = v₂)"
+            rantai: "Jika tidak seporos (Disinggungkan Langsung) → Kelajuan Linear Sama (v₁ = v₂)"
         };
 
         tipeRodaSelect.addEventListener('change', (e) => {
