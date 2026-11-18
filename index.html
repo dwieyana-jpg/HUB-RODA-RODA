@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Interaktif Hubungan Roda-Roda (GMB)</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+            align-items: center;
+        }
+
+        @media (min-width: 850px) {
+            .container {
+                flex-direction: row;
+                max-width: 1100px;
+                justify-content: center;
+                align-items: flex-start;
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .canvas-wrapper {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        canvas {
+            background: #090d16;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            height: auto;
+            aspect-ratio: 500 / 430;
+            touch-action: none;
+        }
+
+        .status-box {
+            margin-top: 10px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 8px 12px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .status-box span {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #38bdf8;
+            display: inline-block;
+            margin-top: 2px;
+        }
+
+        .controls {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        input[type="range"] {
+            padding: 6px 0;
+            cursor: pointer;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .slider-val {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--accent);
+            float: right;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #btnToggle {
+            background: var(--primary);
+            color: white;
+        }
+        #btnToggle:hover, #btnToggle:active {
+            background: var(--primary-hover);
+        }
+
+        #btnReset {
+            background: #334155;
+            color: white;
+        }
+        #btnReset:hover, #btnReset:active {
+            background: #475569;
+        }
+
+        .info-panel {
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 4px solid var(--accent);
+            padding: 10px 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Simulasi Fisika: Hubungan Roda-Roda (GMB)</h1>
+        <p>Virtual Physics Lab • SMAN 1 Karanganyar</p>
+    </header>
+
+    <div class="container">
+        <!-- Canvas Area -->
+        <div class="canvas-wrapper">
+            <canvas id="simCanvas" width="500" height="430"></canvas>
+            <div class="status-box">
+                Status:<br><span id="statusText">Roda Seporos → Kecepatan Sudut Sama (ω₁ = ω₂)</span>
+            </div>
+        </div>
+
+        <!-- Controls Area -->
+        <div class="controls">
+            <div class="control-group">
+                <label for="tipeRodaSelect">Pilih Jenis Hubungan Roda:</label>
+                <select id="tipeRodaSelect">
+                    <option value="seporos">Roda Seporos</option>
+                    <option value="sabuk">Tidak Seporos (Dihubungkan Sabuk)</option>
+                    <option value="rantai">Tidak Seporos (Dihubungkan Rantai/Gigi)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Jari-jari Roda 1 (R₁): <span id="r1Val" class="slider-val">1.8 m</span></label>
+                <input type="range" id="rangeR1" min="1.0" max="2.6" step="0.2" value="1.8">
+            </div>
+
+            <div class="control-group">
+                <label>Jari-jari Roda 2 (R₂): <span id="r2Val" class="slider-val">1.0 m</span></label>
+                <input type="range" id="rangeR2" min="0.6" max="2.0" step="0.2" value="1.0">
+            </div>
+
+            <div class="control-group">
+                <label>Kecepatan Sudut Roda 1 (ω₁): <span id="w1Val" class="slider-val">2.0 rad/s</span></label>
+                <input type="range" id="rangeW1" min="0.5" max="4.0" step="0.1" value="2.0">
+            </div>
+
+            <div class="btn-group">
+                <button id="btnToggle">Pause / Mulai</button>
+                <button id="btnReset">Reset</button>
+            </div>
+
+            <div class="info-panel" id="infoText">
+                Memuat deskripsi sistem roda...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const tipeRodaSelect = document.getElementById('tipeRodaSelect');
+        const rangeR1 = document.getElementById('rangeR1');
+        const rangeR2 = document.getElementById('rangeR2');
+        const rangeW1 = document.getElementById('rangeW1');
+        const r1Val = document.getElementById('r1Val');
+        const r2Val = document.getElementById('r2Val');
+        const w1Val = document.getElementById('w1Val');
+        const btnToggle = document.getElementById('btnToggle');
+        const btnReset = document.getElementById('btnReset');
+        const infoText = document.getElementById('infoText');
+        const statusText = document.getElementById('statusText');
+
+        let r1_meter = parseFloat(rangeR1.value);
+        let r2_meter = parseFloat(rangeR2.value);
+        let omega1 = parseFloat(rangeW1.value);
+        
+        let theta1 = 0;
+        let theta2 = 0;
+        let isRunning = true;
+        let lastTime = 0;
+
+        const descriptions = {
+            seporos: "<b>Roda Seporos</b>: Pusat roda saling terhubung pada poros yang sama. Konsep: Kecepatan sudut kedua roda bernilai sama (ω₁ = ω₂), namun kelajuan linear berbeda tergantung jari-jari (v = ω · R).",
+            sabuk: "<b>Dihubungkan Sabuk / Tali</b>: Kedua roda terpisah dan dihubungkan oleh sabuk yang melingkar searah. Konsep: Kelajuan linear kedua roda sama (v₁ = v₂), sehingga ω₁ · R₁ = ω₂ · R₂. Arah putaran searah.",
+            rantai: "<b>Dihubungkan Rantai / Bersinggungan</b>: Roda gigi bersinggungan langsung atau dihubungkan rantai. Konsep: Kelajuan linear sama (v₁ = v₂), tetapi arah putaran kedua roda <b>berlawanan arah</b>."
+        };
+
+        const statusMessages = {
+            seporos: "Jika seporos → Kecepatan Sudut Sama (ω₁ = ω₂)",
+            sabuk: "Jika tidak seporos (sabuk) → Kelajuan Linear Sama (v₁ = v₂)",
+            rantai: "Jika tidak seporos (rantai/gigi) → Kelajuan Linear Sama (v₁ = v₂)"
+        };
+
+        tipeRodaSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            infoText.innerHTML = descriptions[val];
+            statusText.innerText = statusMessages[val];
+        });
+        
+        infoText.innerHTML = descriptions['seporos'];
+        statusText.innerText = statusMessages['seporos'];
+
+        rangeR1.addEventListener('input', (e) => {
+            r1_meter = parseFloat(e.target.value);
+            r1Val.innerText = r1_meter.toFixed(1) + " m";
+        });
+
+        rangeR2.addEventListener('input', (e) => {
+            r2_meter = parseFloat(e.target.value);
+            r2Val.innerText = r2_meter.toFixed(1) + " m";
+        });
+
+        rangeW1.addEventListener('input', (e) => {
+            omega1 = parseFloat(e.target.value);
+            w1Val.innerText = omega1.toFixed(1) + " rad/s";
+        });
+
+        btnToggle.addEventListener('click', () => { isRunning = !isRunning; });
+        btnReset.addEventListener('click', () => {
+            theta1 = 0;
+            theta2 = 0;
+            if(!isRunning) {
+                isRunning = true;
+                requestAnimationFrame(update);
+            }
+        });
+
+        function drawWheel(x, y, R_px, theta, label, color, teeth = 12) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(theta);
+
+            ctx.fillStyle = '#1e293b';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(0, 0, R_px, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            for (let i = 0; i < teeth; i++) {
+                const angle = (i * 2 * Math.PI) / teeth;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(R_px * Math.cos(angle), R_px * Math.sin(angle));
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.beginPath();
+            ctx.arc(R_px * 0.7, 0, 6, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.restore();
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y - R_px - 12);
+        }
+
+        function update(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            const mode = tipeRodaSelect.value;
+            const scale = 50; 
+            const R1_px = r1_meter * scale;
+            let R2_px = r2_meter * scale;
+
+            let omega2 = 0;
+            if (mode === 'seporos') {
+                omega2 = omega1; 
+            } else if (mode === 'sabuk') {
+                omega2 = omega1 * (r1_meter / r2_meter);
+            } else if (mode === 'rantai') {
+                omega2 = -omega1 * (r1_meter / r2_meter);
+            }
+
+            if (isRunning) {
+                theta1 += omega1 * dt;
+                theta2 += omega2 * dt;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+
+            if (mode === 'seporos') {
+                drawWheel(centerX, centerY, R1_px, theta1, "Roda 1 (R₁)", "#38bdf8", 16);
+                if (R2_px >= R1_px) {
+                    R2_px = R1_px - 25; 
+                }
+                drawWheel(centerX, centerY, R2_px, theta2, "Roda 2 (R₂)", "#f43f5e", 10);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 5, 0, 2 * Math.PI);
+                ctx.fill();
+
+            } else if (mode === 'sabuk') {
+                const dist = R1_px + R2_px + 80;
+                const x1 = centerX - dist / 2;
+                const x2 = centerX + dist / 2;
+                const y = centerY;
+
+                ctx.strokeStyle = '#64748b';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(x1, y - R1_px);
+                ctx.lineTo(x2, y - R2_px);
+                ctx.moveTo(x1, y + R1_px);
+                ctx.lineTo(x2, y + R2_px);
+                ctx.stroke();
+
+                drawWheel(x1, y, R1_px, theta1, "Roda 1 (R₁)", "#38bdf8", 14);
+                drawWheel(x2, y, R2_px, theta2, "Roda 2 (R₂)", "#22c55e", 12);
+
+            } else if (mode === 'rantai') {
+                const dist = R1_px + R2_px;
+                const x1 = centerX - dist / 2;
+                const x2 = centerX + dist / 2;
+                const y = centerY;
+
+                drawWheel(x1, y, R1_px, theta1, "Roda 1 (R₁)", "#38bdf8", 14);
+                drawWheel(x2, y, R2_px, theta2, "Roda 2 (R₂)", "#eab308", 12);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(x1 + R1_px, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '13px monospace';
+            ctx.textAlign = 'left';
+
+            const v1 = (omega1 * r1_meter).toFixed(2);
+            const v2 = (Math.abs(omega2) * r2_meter).toFixed(2);
+
+            ctx.fillText(`Kecepatan Sudut (ω₁) : ${omega1.toFixed(1)} rad/s`, 15, 25);
+            ctx.fillText(`Kecepatan Sudut (ω₂) : ${Math.abs(omega2).toFixed(1)} rad/s`, 15, 45);
+
+            if (mode === 'seporos') {
+                ctx.fillText(`Kelajuan Linear (v₁) : ${v1} m/s`, 15, 65);
+                ctx.fillText(`Kelajuan Linear (v₂) : ${v2} m/s`, 15, 85);
+            } else {
+                ctx.fillText(`Kelajuan Linear (v)  : ${v1} m/s`, 15, 65);
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        requestAnimationFrame(update);
+    </script>
+</body>
+</html>
